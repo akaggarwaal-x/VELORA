@@ -1,0 +1,137 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String?
+  role      String   @default("customer")
+  createdAt DateTime @default(now())
+  orders    Order[]
+}
+
+model Category {
+  id          Int       @id @default(autoincrement())
+  name        String
+  slug        String    @unique
+  description String?
+  products    Product[]
+}
+
+model Product {
+  id          Int              @id @default(autoincrement())
+  name        String
+  slug        String           @unique
+  description String
+  price       Float
+  currency    String           @default("USD")
+  image       String
+  ingredients String[]
+  benefits    String[]
+  isVegan     Boolean          @default(true)
+  isOrganic   Boolean          @default(true)
+  categoryId  Int
+  category    Category         @relation(fields: [categoryId], references: [id])
+  variants    ProductVariant[]
+  reviews     Review[]
+  createdAt   DateTime         @default(now())
+}
+
+model ProductVariant {
+  id        Int     @id @default(autoincrement())
+  productId Int
+  product   Product @relation(fields: [productId], references: [id])
+  sku       String  @unique
+  size      String
+  stock     Int
+}
+
+model Order {
+  id          Int         @id @default(autoincrement())
+  userId      String?
+  user        User?       @relation(fields: [userId], references: [id])
+  totalAmount Float
+  currency    String      @default("USD")
+  status      String      @default("pending")
+  createdAt   DateTime    @default(now())
+  items       OrderItem[]
+}
+
+model OrderItem {
+  id        Int     @id @default(autoincrement())
+  orderId   Int
+  order     Order   @relation(fields: [orderId], references: [id])
+  productId Int
+  quantity  Int
+  unitPrice Float
+}
+
+model BulkInquiry {
+  id          Int      @id @default(autoincrement())
+  companyName String
+  contactName String
+  email       String
+  country     String
+  interest    String
+  moq         String
+  message     String
+  createdAt   DateTime @default(now())
+}
+
+model Review {
+  id        Int      @id @default(autoincrement())
+  productId Int
+  product   Product  @relation(fields: [productId], references: [id])
+  author    String
+  rating    Int
+  comment   String
+  createdAt DateTime @default(now())
+}
+
+model BlogCategory {
+  id    Int        @id @default(autoincrement())
+  name  String
+  slug  String     @unique
+  posts BlogPost[]
+}
+
+model BlogPost {
+  id             Int          @id @default(autoincrement())
+  title          String
+  slug           String       @unique
+  excerpt        String
+  content        String
+  seoTitle       String?
+  seoDescription String?
+  image          String?
+  categoryId     Int
+  category       BlogCategory @relation(fields: [categoryId], references: [id])
+  publishedAt    DateTime?
+  createdAt      DateTime     @default(now())
+}
+
+model Coupon {
+  id           Int      @id @default(autoincrement())
+  code         String   @unique
+  type         String
+  value        Float
+  minOrder     Float?
+  validUntil   DateTime
+  usageLimit   Int?
+  usageCount   Int      @default(0)
+}
+
+model ShippingZone {
+  id          Int    @id @default(autoincrement())
+  name        String
+  countryCode String
+  minDays     Int
+  maxDays     Int
+  baseRate    Float
+}
